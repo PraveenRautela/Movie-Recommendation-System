@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recommendation Form</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <form id="recommendForm">
+            <label for="userInput">Enter your input:</label>
+            <input type="text" id="userInput" name="userInput" autocomplete="off" required>
+            <button type="submit">Recommend</button>
+        </form>
+        
+        <div id="suggestions" class="autocomplete-suggestions"></div> 
+        <h2>Recommendations:</h2>
+        <div id="recommendationsList"></div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            $('#userInput').on('input', function(){
+                var query = $(this).val();
+                if (query.length > 0) {
+                    $.ajax({
+                        url: '/suggest',
+                        method: 'GET',
+                        data: { query: query },
+                        success: function(data){
+                            var suggestions = data.suggestions;
+                            var suggestionsDiv = $('#suggestions');
+                            suggestionsDiv.empty();
+                            suggestions.forEach(function(suggestion){
+                                suggestionsDiv.append('<div class="autocomplete-suggestion">' + suggestion + '</div>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#suggestions').empty();
+                }
+            });
+
+            $(document).on('click', '.autocomplete-suggestion', function(){
+                var suggestion = $(this).text();
+                $('#userInput').val(suggestion);
+                $('#suggestions').empty();
+            });
+
+            $('#recommendForm').on('submit', function(event){
+                event.preventDefault();
+                var userInput = $('#userInput').val();
+                
+                $.ajax({
+                    url: '/recommend',
+                    method: 'POST',
+                    data: { userInput: userInput },
+                    success: function(data){
+                        $('#recommendationsList').empty();
+                        data.recommendations.forEach(function(item){
+                            $('#recommendationsList').append('<div>' + item + '</div>');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
